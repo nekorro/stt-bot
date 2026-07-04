@@ -1,4 +1,4 @@
-from uebot.transcriber import Transcriber, TranscriptionResult
+from stt_bot.transcriber import Transcriber, TranscriptionResult
 
 
 class FakeModel:

@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock
 
-from uebot.bot import build_application
-from uebot.config import load_config
-from uebot.logconfig import setup_logging
+from stt_bot.bot import build_application
+from stt_bot.config import load_config
+from stt_bot.logconfig import setup_logging
 
 
 def test_setup_logging_runs():

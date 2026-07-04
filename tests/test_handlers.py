@@ -3,9 +3,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from uebot.config import load_config
-from uebot.handlers import AudioHandler
-from uebot.transcriber import TranscriptionResult
+from stt_bot.config import load_config
+from stt_bot.handlers import AudioHandler
+from stt_bot.transcriber import TranscriptionResult
 
 
 def make_update(chat_id=1, message_id=99, voice=None, audio=None):

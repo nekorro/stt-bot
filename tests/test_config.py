@@ -1,5 +1,5 @@
 import pytest
-from uebot.config import load_config, Config, ConfigError
+from stt_bot.config import load_config, Config, ConfigError
 
 
 def test_minimal_env_uses_defaults():

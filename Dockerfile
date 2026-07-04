@@ -28,4 +28,4 @@ RUN useradd --uid 1000 --create-home --shell /usr/sbin/nologin appuser
 USER 1000
 
 EXPOSE 9100
-ENTRYPOINT ["python", "-m", "uebot"]
+ENTRYPOINT ["python", "-m", "stt_bot"]

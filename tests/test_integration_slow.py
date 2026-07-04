@@ -3,7 +3,7 @@ import subprocess
 
 import pytest
 
-from uebot.transcriber import Transcriber, TranscriptionResult
+from stt_bot.transcriber import Transcriber, TranscriptionResult
 
 pytestmark = pytest.mark.slow
 

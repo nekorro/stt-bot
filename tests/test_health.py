@@ -3,7 +3,7 @@ import urllib.request
 
 import pytest
 
-from uebot import health
+from stt_bot import health
 
 
 @pytest.fixture
@@ -37,4 +37,4 @@ def test_readyz_reflects_state(server):
 def test_metrics_endpoint(server):
     status, body = _get(server, "/metrics")
     assert status == 200
-    assert "uebot_build_info" in body
+    assert "stt_bot_build_info" in body

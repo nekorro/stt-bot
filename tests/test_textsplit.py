@@ -1,4 +1,4 @@
-from uebot.textsplit import split_message, TELEGRAM_MAX_CHARS
+from stt_bot.textsplit import split_message, TELEGRAM_MAX_CHARS
 
 
 def test_short_text_single_chunk():

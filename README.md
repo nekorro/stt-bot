@@ -1,4 +1,4 @@
-# uebot
+# stt-bot
 
 A Telegram bot that turns voice messages and audio files into text. Send it a voice
 note (or forward an audio file) and it replies to that message with a transcription,
@@ -41,7 +41,7 @@ All configuration is via environment variables:
 python3.14 -m venv .venv && . .venv/bin/activate
 pip install --extra-index-url https://download.pytorch.org/whl/cpu ".[whisper]"
 export TELEGRAM_BOT_TOKEN="123456:your-token"
-python -m uebot
+python -m stt_bot
 ```
 
 You'll also need [ffmpeg](https://ffmpeg.org/) installed (Whisper uses it to decode audio).
@@ -49,7 +49,7 @@ You'll also need [ffmpeg](https://ffmpeg.org/) installed (Whisper uses it to dec
 ## Running with Docker
 
 ```bash
-docker run -e TELEGRAM_BOT_TOKEN="123456:your-token" nekorro/uebot:latest
+docker run -e TELEGRAM_BOT_TOKEN="123456:your-token" nekorro/stt-bot:latest
 ```
 
 The image bundles ffmpeg and the `base` model, so it starts without downloading anything.
@@ -58,10 +58,10 @@ The image bundles ffmpeg and the `base` model, so it starts without downloading 
 
 The bot exposes Prometheus metrics on `METRICS_PORT`:
 
-- `uebot_messages_received_total{type}`
-- `uebot_transcriptions_total{status}`
-- `uebot_transcription_duration_seconds`
-- `uebot_audio_duration_seconds`
+- `stt_bot_messages_received_total{type}`
+- `stt_bot_transcriptions_total{status}`
+- `stt_bot_transcription_duration_seconds`
+- `stt_bot_audio_duration_seconds`
 
 plus `/healthz` (liveness) and `/readyz` (ready once the model is loaded).
 
