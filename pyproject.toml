@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "uebot"
+version = "0.1.0"
+description = "Telegram bot that transcribes voice and audio messages to text"
+requires-python = ">=3.14"
+dependencies = [
+    "python-telegram-bot>=22,<23",
+    "prometheus-client>=0.20",
+]
+
+[project.optional-dependencies]
+whisper = ["openai-whisper==20250625"]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+]
+
+[project.scripts]
+uebot = "uebot.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
