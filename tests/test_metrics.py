@@ -11,5 +11,6 @@ def test_counters_increment_and_render():
     assert "uebot_messages_received_total" in output
     assert "uebot_transcriptions_total" in output
     assert "uebot_transcription_duration_seconds" in output
+    assert 'uebot_transcription_duration_seconds_bucket{le="60.0"}' in output
     assert "uebot_audio_duration_seconds" in output
     assert "uebot_build_info" in output

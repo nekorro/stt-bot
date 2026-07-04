@@ -18,6 +18,7 @@ TRANSCRIPTIONS = Counter(
 TRANSCRIPTION_DURATION = Histogram(
     "uebot_transcription_duration_seconds",
     "Wall-clock time spent transcribing",
+    buckets=(1, 5, 15, 30, 60, 120, 300, 600),
 )
 AUDIO_DURATION = Histogram(
     "uebot_audio_duration_seconds",

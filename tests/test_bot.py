@@ -16,3 +16,10 @@ def test_build_application_registers_handlers():
     # At least one handler group with two handlers (/start + media).
     total = sum(len(hs) for hs in app.handlers.values())
     assert total >= 2
+
+
+def test_build_application_registers_error_handler():
+    cfg = load_config({"TELEGRAM_BOT_TOKEN": "123:abc"})
+    handler = MagicMock()
+    app = build_application(cfg, handler)
+    assert app.error_handlers  # at least one error handler registered
