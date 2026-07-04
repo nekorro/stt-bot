@@ -75,12 +75,21 @@ class AudioHandler:
         path = tmp.name
         tmp.close()
         try:
-            tg_file = await context.bot.get_file(media.file_id)
-            await tg_file.download_to_drive(custom_path=path)
-
-            async with self._sem:
-                with TRANSCRIPTION_DURATION.time():
-                    result = await asyncio.to_thread(self._transcriber.transcribe, path)
+            try:
+                tg_file = await context.bot.get_file(media.file_id)
+                await tg_file.download_to_drive(custom_path=path)
+                async with self._sem:
+                    with TRANSCRIPTION_DURATION.time():
+                        result = await asyncio.to_thread(self._transcriber.transcribe, path)
+            except Exception:  # noqa: BLE001 — report to user, keep bot alive
+                TRANSCRIPTIONS.labels(status="failure").inc()
+                log.exception(
+                    "transcription failed chat=%s msg=%s", chat_id, msg.message_id
+                )
+                await msg.reply_text(
+                    "⚠️ Couldn't transcribe this one.", reply_to_message_id=msg.message_id
+                )
+                return
 
             if not result.text:
                 TRANSCRIPTIONS.labels(status="empty").inc()
@@ -96,12 +105,6 @@ class AudioHandler:
             )
             for chunk in split_message(result.text):
                 await msg.reply_text(chunk, reply_to_message_id=msg.message_id)
-        except Exception:  # noqa: BLE001 — report to user, keep bot alive
-            TRANSCRIPTIONS.labels(status="failure").inc()
-            log.exception("transcription failed chat=%s msg=%s", chat_id, msg.message_id)
-            await msg.reply_text(
-                "⚠️ Couldn't transcribe this one.", reply_to_message_id=msg.message_id
-            )
         finally:
             try:
                 os.unlink(path)

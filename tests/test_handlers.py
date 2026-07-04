@@ -89,3 +89,49 @@ async def test_transcription_failure_replies_error(cfg, tmp_path):
     await handler.handle(update, make_context(tmp_path))
     sent = update.effective_message.reply_text.await_args_list[0]
     assert "couldn't transcribe" in sent.args[0].lower()
+
+
+async def test_size_guard(tmp_path):
+    cfg = load_config({"TELEGRAM_BOT_TOKEN": "x", "MAX_FILE_MB": "1"})
+    transcriber = MagicMock()
+    handler = AudioHandler(transcriber, cfg)
+    update = make_update(voice=media(file_size=5 * 1024 * 1024))
+    await handler.handle(update, make_context(tmp_path))
+    transcriber.transcribe.assert_not_called()
+    sent = update.effective_message.reply_text.await_args_list[0]
+    assert "too large" in sent.args[0].lower()
+
+
+async def test_temp_file_removed_after_success(cfg, tmp_path):
+    import os
+    transcriber = MagicMock()
+    transcriber.transcribe.return_value = TranscriptionResult("hi", "en", 1.0)
+    handler = AudioHandler(transcriber, cfg)
+    captured = {}
+
+    async def fake_download(custom_path=None):
+        captured["path"] = custom_path
+        with open(custom_path, "wb") as fh:
+            fh.write(b"x")
+
+    from types import SimpleNamespace
+    tg_file = SimpleNamespace(download_to_drive=fake_download)
+    context = SimpleNamespace(bot=SimpleNamespace(get_file=AsyncMock(return_value=tg_file)))
+    update = make_update(voice=media())
+    await handler.handle(update, context)
+    assert not os.path.exists(captured["path"])
+
+
+async def test_send_failure_after_success_does_not_send_error_reply(cfg, tmp_path):
+    transcriber = MagicMock()
+    transcriber.transcribe.return_value = TranscriptionResult("x" * 5000, "en", 5.0)
+    handler = AudioHandler(transcriber, cfg)
+    update = make_update(voice=media())
+    update.effective_message.reply_text = AsyncMock(side_effect=[None, RuntimeError("send failed")])
+    with pytest.raises(RuntimeError):
+        await handler.handle(update, make_context(tmp_path))
+    calls = update.effective_message.reply_text.await_args_list
+    assert all(
+        "couldn't transcribe" not in (c.args[0].lower() if c.args else "")
+        for c in calls
+    )
