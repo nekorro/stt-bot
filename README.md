@@ -4,8 +4,7 @@ A Telegram bot that turns voice messages into text. Send it a voice note and it
 replies to that message with a transcription. Russian and English are recognised by
 default; the language is detected automatically for each message.
 
-Transcription is powered by [OpenAI Whisper](https://github.com/openai/whisper),
-running on CPU.
+Transcription is powered by [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (CTranslate2), running on CPU with INT8 quantization for speed.
 
 ## How it works
 
@@ -25,6 +24,10 @@ All configuration is via environment variables:
 |----------|---------|-------------|
 | `TELEGRAM_BOT_TOKEN` | — (required) | Bot token from [@BotFather](https://t.me/BotFather). |
 | `WHISPER_MODEL` | `base` | Whisper model: `tiny`, `base`, `small`, `medium`, `large`. Bigger = more accurate, slower. |
+| `WHISPER_COMPUTE_TYPE` | `int8` | CTranslate2 compute type on CPU (`int8`, `int8_float32`, `float32`). |
+| `WHISPER_BEAM_SIZE` | `1` | Decoding beam size; `1` = greedy (fastest). |
+| `WHISPER_VAD` | `true` | Skip silence with voice-activity detection. |
+| `WHISPER_CPU_THREADS` | `0` | CTranslate2 CPU threads (`0` = library default; set to the pod's CPU limit). |
 | `WHISPER_TASK` | `transcribe` | `transcribe` (keep the spoken language) or `translate` (into English). |
 | `WHISPER_DEVICE` | `cpu` | Compute device. |
 | `WHISPER_LANGUAGE` | auto | Force a single source language (e.g. `en`, `ru`); overrides the allowed-languages set below. |
@@ -40,12 +43,10 @@ All configuration is via environment variables:
 
 ```bash
 python3.14 -m venv .venv && . .venv/bin/activate
-pip install --extra-index-url https://download.pytorch.org/whl/cpu ".[whisper]"
+pip install ".[whisper]"
 export TELEGRAM_BOT_TOKEN="123456:your-token"
 python -m stt_bot
 ```
-
-You'll also need [ffmpeg](https://ffmpeg.org/) installed (Whisper uses it to decode audio).
 
 ## Running with Docker
 
