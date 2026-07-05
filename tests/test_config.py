@@ -51,3 +51,35 @@ def test_allowed_chat_ids_parsed():
 def test_invalid_int_raises():
     with pytest.raises(ConfigError):
         load_config({"TELEGRAM_BOT_TOKEN": "x", "METRICS_PORT": "notanint"})
+
+
+def test_speed_defaults():
+    cfg = load_config({"TELEGRAM_BOT_TOKEN": "x"})
+    assert cfg.whisper_compute_type == "int8"
+    assert cfg.whisper_beam_size == 1
+    assert cfg.whisper_vad is True
+    assert cfg.whisper_cpu_threads == 0
+
+
+def test_speed_overrides_parsed():
+    cfg = load_config({
+        "TELEGRAM_BOT_TOKEN": "x",
+        "WHISPER_COMPUTE_TYPE": "float32",
+        "WHISPER_BEAM_SIZE": "5",
+        "WHISPER_VAD": "false",
+        "WHISPER_CPU_THREADS": "2",
+    })
+    assert cfg.whisper_compute_type == "float32"
+    assert cfg.whisper_beam_size == 5
+    assert cfg.whisper_vad is False
+    assert cfg.whisper_cpu_threads == 2
+
+
+def test_invalid_beam_size_raises():
+    with pytest.raises(ConfigError):
+        load_config({"TELEGRAM_BOT_TOKEN": "x", "WHISPER_BEAM_SIZE": "0"})
+
+
+def test_invalid_vad_raises():
+    with pytest.raises(ConfigError):
+        load_config({"TELEGRAM_BOT_TOKEN": "x", "WHISPER_VAD": "maybe"})

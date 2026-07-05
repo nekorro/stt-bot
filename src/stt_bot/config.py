@@ -20,6 +20,10 @@ class Config:
     whisper_device: str
     whisper_language: str | None
     whisper_allowed_languages: tuple[str, ...] | None
+    whisper_compute_type: str
+    whisper_beam_size: int
+    whisper_vad: bool
+    whisper_cpu_threads: int
     whisper_download_root: str | None
     allowed_chat_ids: frozenset[int] | None
     max_audio_duration_s: int
@@ -44,6 +48,18 @@ def _int(env: Mapping[str, str], key: str, default: int) -> int:
         return int(raw)
     except ValueError as exc:
         raise ConfigError(f"{key} must be an integer, got {raw!r}") from exc
+
+
+def _bool(env: Mapping[str, str], key: str, default: bool) -> bool:
+    raw = env.get(key)
+    if raw is None or raw.strip() == "":
+        return default
+    value = raw.strip().lower()
+    if value in {"1", "true", "yes", "on"}:
+        return True
+    if value in {"0", "false", "no", "off"}:
+        return False
+    raise ConfigError(f"{key} must be a boolean, got {raw!r}")
 
 
 def _languages(raw: str | None) -> tuple[str, ...] | None:
@@ -71,6 +87,13 @@ def load_config(env: Mapping[str, str] = os.environ) -> Config:
     language = env.get("WHISPER_LANGUAGE", "").strip() or None
     download_root = env.get("WHISPER_DOWNLOAD_ROOT", "").strip() or None
 
+    beam_size = _int(env, "WHISPER_BEAM_SIZE", 1)
+    if beam_size < 1:
+        raise ConfigError(f"WHISPER_BEAM_SIZE must be >= 1, got {beam_size}")
+    cpu_threads = _int(env, "WHISPER_CPU_THREADS", 0)
+    if cpu_threads < 0:
+        raise ConfigError(f"WHISPER_CPU_THREADS must be >= 0, got {cpu_threads}")
+
     return Config(
         telegram_bot_token=_req(env, "TELEGRAM_BOT_TOKEN"),
         whisper_model=env.get("WHISPER_MODEL", "base").strip() or "base",
@@ -78,6 +101,10 @@ def load_config(env: Mapping[str, str] = os.environ) -> Config:
         whisper_device=env.get("WHISPER_DEVICE", "cpu").strip() or "cpu",
         whisper_language=language,
         whisper_allowed_languages=_languages(env.get("WHISPER_ALLOWED_LANGUAGES")),
+        whisper_compute_type=env.get("WHISPER_COMPUTE_TYPE", "int8").strip() or "int8",
+        whisper_beam_size=beam_size,
+        whisper_vad=_bool(env, "WHISPER_VAD", True),
+        whisper_cpu_threads=cpu_threads,
         whisper_download_root=download_root,
         allowed_chat_ids=_chat_ids(env.get("ALLOWED_CHAT_IDS")),
         max_audio_duration_s=_int(env, "MAX_AUDIO_DURATION_S", 600),
