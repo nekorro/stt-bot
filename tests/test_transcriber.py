@@ -101,3 +101,57 @@ def test_warmup_never_raises_on_model_error():
             raise RuntimeError("boom")
 
     Transcriber(BoomModel()).warmup(audio=[0.0])  # must not raise
+
+
+def test_priority_language_wins_on_near_tie():
+    model = FakeModel(info=FakeInfo("ru", 1.0))
+    detect = lambda p: {"en": 0.55, "ru": 0.40}
+    t = Transcriber(model, allowed_languages=["en", "ru"], detect_language=detect,
+                    priority_language="ru", priority_margin=0.2)
+    t.transcribe("/tmp/a.ogg")
+    assert model.calls[0]["language"] == "ru"
+
+
+def test_priority_language_loses_when_other_clearly_ahead():
+    model = FakeModel(info=FakeInfo("en", 1.0))
+    detect = lambda p: {"en": 0.90, "ru": 0.20}
+    t = Transcriber(model, allowed_languages=["en", "ru"], detect_language=detect,
+                    priority_language="ru", priority_margin=0.2)
+    t.transcribe("/tmp/a.ogg")
+    assert model.calls[0]["language"] == "en"
+
+
+def test_forced_language_ignores_priority():
+    model = FakeModel(info=FakeInfo("en", 1.0))
+    called = {"detect": False}
+
+    def detect(p):
+        called["detect"] = True
+        return {"en": 0.1, "ru": 0.9}
+
+    t = Transcriber(model, language="en", allowed_languages=["en", "ru"], detect_language=detect,
+                    priority_language="ru", priority_margin=0.2)
+    t.transcribe("/tmp/a.ogg")
+    assert model.calls[0]["language"] == "en"
+    assert called["detect"] is False
+
+
+def test_initial_prompt_passed_for_priority_language():
+    model = FakeModel(info=FakeInfo("ru", 1.0))
+    t = Transcriber(model, language="ru", priority_language="ru", initial_prompt="PRIME")
+    t.transcribe("/tmp/a.ogg")
+    assert model.calls[0]["initial_prompt"] == "PRIME"
+
+
+def test_initial_prompt_skipped_for_non_priority_language():
+    model = FakeModel(info=FakeInfo("en", 1.0))
+    t = Transcriber(model, language="en", priority_language="ru", initial_prompt="PRIME")
+    t.transcribe("/tmp/a.ogg")
+    assert model.calls[0]["initial_prompt"] is None
+
+
+def test_no_initial_prompt_by_default():
+    model = FakeModel(info=FakeInfo("en", 1.0))
+    t = Transcriber(model)
+    t.transcribe("/tmp/a.ogg")
+    assert model.calls[0]["initial_prompt"] is None
