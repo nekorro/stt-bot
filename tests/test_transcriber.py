@@ -93,3 +93,11 @@ def test_warmup_primes_model():
     assert model.calls
     assert model.calls[0]["audio"] == [0.0]
     assert model.calls[0]["vad_filter"] is False
+
+
+def test_warmup_never_raises_on_model_error():
+    class BoomModel:
+        def transcribe(self, audio, **kwargs):
+            raise RuntimeError("boom")
+
+    Transcriber(BoomModel()).warmup(audio=[0.0])  # must not raise

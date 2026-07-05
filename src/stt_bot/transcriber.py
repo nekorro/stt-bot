@@ -97,11 +97,11 @@ class Transcriber:
 
     def warmup(self, audio=None) -> None:
         """Prime CTranslate2 so the first real request isn't slow. Best-effort."""
-        if audio is None:
-            import numpy as np  # provided transitively by faster-whisper
-
-            audio = np.zeros(16000, dtype=np.float32)  # 1s of silence @ 16 kHz
         try:
+            if audio is None:
+                import numpy as np  # provided transitively by faster-whisper
+
+                audio = np.zeros(16000, dtype=np.float32)  # 1s of silence @ 16 kHz
             segments, _ = self._model.transcribe(
                 audio, beam_size=self._beam_size, vad_filter=False
             )
