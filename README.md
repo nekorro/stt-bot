@@ -54,7 +54,7 @@ python -m stt_bot
 docker run -e TELEGRAM_BOT_TOKEN="123456:your-token" nekorro/stt-bot:latest
 ```
 
-The image bundles ffmpeg and the `base` model, so it starts without downloading anything.
+The image bundles the `base` model, so it starts without downloading anything.
 
 ## Monitoring
 
