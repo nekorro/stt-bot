@@ -25,11 +25,17 @@ def main() -> None:
     transcriber = Transcriber.load(
         config.whisper_model,
         config.whisper_device,
+        compute_type=config.whisper_compute_type,
+        cpu_threads=config.whisper_cpu_threads,
         task=config.whisper_task,
         language=config.whisper_language,
         allowed_languages=config.whisper_allowed_languages,
+        beam_size=config.whisper_beam_size,
+        vad_filter=config.whisper_vad,
         download_root=config.whisper_download_root,
     )
+    log.info("warming up")
+    transcriber.warmup()
     set_ready(True)
     log.info("model loaded; starting polling")
 
