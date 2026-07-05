@@ -1,8 +1,8 @@
 # stt-bot
 
-A Telegram bot that turns voice messages and audio files into text. Send it a voice
-note (or forward an audio file) and it replies to that message with a transcription,
-in whatever language was spoken.
+A Telegram bot that turns voice messages into text. Send it a voice note and it
+replies to that message with a transcription. Russian and English are recognised by
+default; the language is detected automatically for each message.
 
 Transcription is powered by [OpenAI Whisper](https://github.com/openai/whisper),
 running on CPU.
@@ -10,7 +10,7 @@ running on CPU.
 ## How it works
 
 The bot uses long polling, so it needs no public URL or inbound firewall rules — it
-just needs outbound access to Telegram. For each incoming voice/audio message it:
+just needs outbound access to Telegram. For each incoming voice message it:
 
 1. downloads the file,
 2. transcribes it with Whisper (in a worker thread so the bot stays responsive),
@@ -27,7 +27,8 @@ All configuration is via environment variables:
 | `WHISPER_MODEL` | `base` | Whisper model: `tiny`, `base`, `small`, `medium`, `large`. Bigger = more accurate, slower. |
 | `WHISPER_TASK` | `transcribe` | `transcribe` (keep the spoken language) or `translate` (into English). |
 | `WHISPER_DEVICE` | `cpu` | Compute device. |
-| `WHISPER_LANGUAGE` | auto | Force a source language (e.g. `en`, `ru`); omit to auto-detect. |
+| `WHISPER_LANGUAGE` | auto | Force a single source language (e.g. `en`, `ru`); overrides the allowed-languages set below. |
+| `WHISPER_ALLOWED_LANGUAGES` | `en,ru` | Comma-separated languages to restrict detection to (one is picked per message). Set empty to allow all languages. |
 | `ALLOWED_CHAT_IDS` | all | Comma-separated chat IDs to restrict the bot to. |
 | `MAX_AUDIO_DURATION_S` | `600` | Reject audio longer than this. |
 | `MAX_FILE_MB` | `50` | Reject files larger than this. |

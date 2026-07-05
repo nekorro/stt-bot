@@ -19,6 +19,7 @@ class Config:
     whisper_task: str
     whisper_device: str
     whisper_language: str | None
+    whisper_allowed_languages: tuple[str, ...] | None
     whisper_download_root: str | None
     allowed_chat_ids: frozenset[int] | None
     max_audio_duration_s: int
@@ -45,6 +46,14 @@ def _int(env: Mapping[str, str], key: str, default: int) -> int:
         raise ConfigError(f"{key} must be an integer, got {raw!r}") from exc
 
 
+def _languages(raw: str | None) -> tuple[str, ...] | None:
+    # Unset → default to Russian + English. Explicit empty string → no restriction.
+    if raw is None:
+        raw = "en,ru"
+    langs = tuple(part.strip().lower() for part in raw.split(",") if part.strip())
+    return langs or None
+
+
 def _chat_ids(raw: str | None) -> frozenset[int] | None:
     if raw is None or raw.strip() == "":
         return None
@@ -68,6 +77,7 @@ def load_config(env: Mapping[str, str] = os.environ) -> Config:
         whisper_task=task,
         whisper_device=env.get("WHISPER_DEVICE", "cpu").strip() or "cpu",
         whisper_language=language,
+        whisper_allowed_languages=_languages(env.get("WHISPER_ALLOWED_LANGUAGES")),
         whisper_download_root=download_root,
         allowed_chat_ids=_chat_ids(env.get("ALLOWED_CHAT_IDS")),
         max_audio_duration_s=_int(env, "MAX_AUDIO_DURATION_S", 600),

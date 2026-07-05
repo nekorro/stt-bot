@@ -7,7 +7,7 @@ from telegram import Update
 
 from .bot import build_application
 from .config import load_config
-from .handlers import AudioHandler
+from .handlers import VoiceHandler
 from .health import set_ready, start_monitoring_server
 from .logconfig import setup_logging
 from .transcriber import Transcriber
@@ -27,12 +27,13 @@ def main() -> None:
         config.whisper_device,
         task=config.whisper_task,
         language=config.whisper_language,
+        allowed_languages=config.whisper_allowed_languages,
         download_root=config.whisper_download_root,
     )
     set_ready(True)
     log.info("model loaded; starting polling")
 
-    handler = AudioHandler(transcriber, config)
+    handler = VoiceHandler(transcriber, config)
     app = build_application(config, handler)
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 

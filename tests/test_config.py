@@ -16,6 +16,21 @@ def test_minimal_env_uses_defaults():
     assert cfg.max_concurrent_transcriptions == 1
     assert cfg.metrics_port == 9100
     assert cfg.log_level == "INFO"
+    assert cfg.whisper_allowed_languages == ("en", "ru")
+
+
+def test_allowed_languages_parsed_and_lowercased():
+    cfg = load_config(
+        {"TELEGRAM_BOT_TOKEN": "x", "WHISPER_ALLOWED_LANGUAGES": "EN, De ,fr"}
+    )
+    assert cfg.whisper_allowed_languages == ("en", "de", "fr")
+
+
+def test_empty_allowed_languages_means_no_restriction():
+    cfg = load_config(
+        {"TELEGRAM_BOT_TOKEN": "x", "WHISPER_ALLOWED_LANGUAGES": ""}
+    )
+    assert cfg.whisper_allowed_languages is None
 
 
 def test_missing_token_raises():

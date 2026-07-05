@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from stt_bot.config import load_config
-from stt_bot.handlers import AudioHandler
+from stt_bot.handlers import VoiceHandler
 from stt_bot.transcriber import TranscriptionResult
 
 
@@ -41,7 +41,7 @@ def cfg():
 async def test_happy_path_replies_with_transcript(cfg, tmp_path):
     transcriber = MagicMock()
     transcriber.transcribe.return_value = TranscriptionResult("hello there", "en", 5.0)
-    handler = AudioHandler(transcriber, cfg)
+    handler = VoiceHandler(transcriber, cfg)
     update = make_update(voice=media())
     await handler.handle(update, make_context(tmp_path))
     update.effective_message.reply_text.assert_awaited()
@@ -53,17 +53,27 @@ async def test_happy_path_replies_with_transcript(cfg, tmp_path):
 async def test_empty_transcript_message(cfg, tmp_path):
     transcriber = MagicMock()
     transcriber.transcribe.return_value = TranscriptionResult("", "en", 1.0)
-    handler = AudioHandler(transcriber, cfg)
+    handler = VoiceHandler(transcriber, cfg)
     update = make_update(voice=media())
     await handler.handle(update, make_context(tmp_path))
     sent = update.effective_message.reply_text.await_args_list[0]
     assert "no speech" in sent.args[0].lower()
 
 
+async def test_audio_file_is_ignored(cfg, tmp_path):
+    # Only voice messages are processed; a plain audio file must be ignored.
+    transcriber = MagicMock()
+    handler = VoiceHandler(transcriber, cfg)
+    update = make_update(voice=None, audio=media())
+    await handler.handle(update, make_context(tmp_path))
+    transcriber.transcribe.assert_not_called()
+    update.effective_message.reply_text.assert_not_awaited()
+
+
 async def test_allowlist_blocks(tmp_path):
     cfg = load_config({"TELEGRAM_BOT_TOKEN": "x", "ALLOWED_CHAT_IDS": "42"})
     transcriber = MagicMock()
-    handler = AudioHandler(transcriber, cfg)
+    handler = VoiceHandler(transcriber, cfg)
     update = make_update(chat_id=7, voice=media())
     await handler.handle(update, make_context(tmp_path))
     transcriber.transcribe.assert_not_called()
@@ -73,7 +83,7 @@ async def test_allowlist_blocks(tmp_path):
 async def test_duration_guard(tmp_path):
     cfg = load_config({"TELEGRAM_BOT_TOKEN": "x", "MAX_AUDIO_DURATION_S": "10"})
     transcriber = MagicMock()
-    handler = AudioHandler(transcriber, cfg)
+    handler = VoiceHandler(transcriber, cfg)
     update = make_update(voice=media(duration=999))
     await handler.handle(update, make_context(tmp_path))
     transcriber.transcribe.assert_not_called()
@@ -84,7 +94,7 @@ async def test_duration_guard(tmp_path):
 async def test_transcription_failure_replies_error(cfg, tmp_path):
     transcriber = MagicMock()
     transcriber.transcribe.side_effect = RuntimeError("boom")
-    handler = AudioHandler(transcriber, cfg)
+    handler = VoiceHandler(transcriber, cfg)
     update = make_update(voice=media())
     await handler.handle(update, make_context(tmp_path))
     sent = update.effective_message.reply_text.await_args_list[0]
@@ -94,7 +104,7 @@ async def test_transcription_failure_replies_error(cfg, tmp_path):
 async def test_size_guard(tmp_path):
     cfg = load_config({"TELEGRAM_BOT_TOKEN": "x", "MAX_FILE_MB": "1"})
     transcriber = MagicMock()
-    handler = AudioHandler(transcriber, cfg)
+    handler = VoiceHandler(transcriber, cfg)
     update = make_update(voice=media(file_size=5 * 1024 * 1024))
     await handler.handle(update, make_context(tmp_path))
     transcriber.transcribe.assert_not_called()
@@ -106,7 +116,7 @@ async def test_temp_file_removed_after_success(cfg, tmp_path):
     import os
     transcriber = MagicMock()
     transcriber.transcribe.return_value = TranscriptionResult("hi", "en", 1.0)
-    handler = AudioHandler(transcriber, cfg)
+    handler = VoiceHandler(transcriber, cfg)
     captured = {}
 
     async def fake_download(custom_path=None):
@@ -125,7 +135,7 @@ async def test_temp_file_removed_after_success(cfg, tmp_path):
 async def test_send_failure_after_success_does_not_send_error_reply(cfg, tmp_path):
     transcriber = MagicMock()
     transcriber.transcribe.return_value = TranscriptionResult("x" * 5000, "en", 5.0)
-    handler = AudioHandler(transcriber, cfg)
+    handler = VoiceHandler(transcriber, cfg)
     update = make_update(voice=media())
     update.effective_message.reply_text = AsyncMock(side_effect=[None, RuntimeError("send failed")])
     with pytest.raises(RuntimeError):

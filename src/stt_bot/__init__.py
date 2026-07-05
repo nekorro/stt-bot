@@ -1,3 +1,3 @@
-"""stt_bot — Telegram voice/audio to text bot."""
+"""stt_bot — Telegram voice-to-text bot."""
 
 __version__ = "0.1.0"

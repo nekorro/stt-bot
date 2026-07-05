@@ -7,7 +7,7 @@ from . import __version__
 
 MESSAGES_RECEIVED = Counter(
     "stt_bot_messages_received_total",
-    "Voice/audio messages received",
+    "Voice messages received",
     ["type"],
 )
 TRANSCRIPTIONS = Counter(
