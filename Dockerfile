@@ -20,6 +20,9 @@ RUN mkdir -p /models \
     && python -c "from faster_whisper import WhisperModel; WhisperModel('base', device='cpu', compute_type='int8', download_root='/models')" \
     && chmod -R a+rX /models
 
+# Force offline mode after bake so runtime never contacts HuggingFace Hub and uses the baked model.
+ENV HF_HUB_OFFLINE=1
+
 # Non-root runtime user.
 RUN useradd --uid 1000 --create-home --shell /usr/sbin/nologin appuser
 USER 1000
