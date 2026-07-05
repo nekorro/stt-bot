@@ -7,6 +7,11 @@ from dataclasses import dataclass
 
 _VALID_TASKS = {"transcribe", "translate"}
 
+_DEFAULT_INITIAL_PROMPT = (
+    "Неформальный разговор, ненормативная лексика: "
+    "бля, хуй, пизда, ебать, охуеть, пиздец, заебись, ёбаный."
+)
+
 
 class ConfigError(Exception):
     """Raised when configuration is missing or invalid."""
@@ -20,6 +25,9 @@ class Config:
     whisper_device: str
     whisper_language: str | None
     whisper_allowed_languages: tuple[str, ...] | None
+    whisper_priority_language: str | None
+    whisper_priority_margin: float
+    whisper_initial_prompt: str | None
     whisper_compute_type: str
     whisper_beam_size: int
     whisper_vad: bool
@@ -48,6 +56,16 @@ def _int(env: Mapping[str, str], key: str, default: int) -> int:
         return int(raw)
     except ValueError as exc:
         raise ConfigError(f"{key} must be an integer, got {raw!r}") from exc
+
+
+def _float(env: Mapping[str, str], key: str, default: float) -> float:
+    raw = env.get(key)
+    if raw is None or raw.strip() == "":
+        return default
+    try:
+        return float(raw)
+    except ValueError as exc:
+        raise ConfigError(f"{key} must be a number, got {raw!r}") from exc
 
 
 def _bool(env: Mapping[str, str], key: str, default: bool) -> bool:
@@ -94,6 +112,11 @@ def load_config(env: Mapping[str, str] = os.environ) -> Config:
     if cpu_threads < 0:
         raise ConfigError(f"WHISPER_CPU_THREADS must be >= 0, got {cpu_threads}")
 
+    priority_margin = _float(env, "WHISPER_PRIORITY_MARGIN", 0.2)
+    if not 0.0 <= priority_margin <= 1.0:
+        raise ConfigError(f"WHISPER_PRIORITY_MARGIN must be in [0.0, 1.0], got {priority_margin}")
+    initial_prompt = env.get("WHISPER_INITIAL_PROMPT", _DEFAULT_INITIAL_PROMPT).strip() or None
+
     return Config(
         telegram_bot_token=_req(env, "TELEGRAM_BOT_TOKEN"),
         whisper_model=env.get("WHISPER_MODEL", "base").strip() or "base",
@@ -101,6 +124,9 @@ def load_config(env: Mapping[str, str] = os.environ) -> Config:
         whisper_device=env.get("WHISPER_DEVICE", "cpu").strip() or "cpu",
         whisper_language=language,
         whisper_allowed_languages=_languages(env.get("WHISPER_ALLOWED_LANGUAGES")),
+        whisper_priority_language=env.get("WHISPER_LANGUAGE_PRIORITY", "ru").strip().lower() or None,
+        whisper_priority_margin=priority_margin,
+        whisper_initial_prompt=initial_prompt,
         whisper_compute_type=env.get("WHISPER_COMPUTE_TYPE", "int8").strip() or "int8",
         whisper_beam_size=beam_size,
         whisper_vad=_bool(env, "WHISPER_VAD", True),

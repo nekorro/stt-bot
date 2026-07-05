@@ -83,3 +83,40 @@ def test_invalid_beam_size_raises():
 def test_invalid_vad_raises():
     with pytest.raises(ConfigError):
         load_config({"TELEGRAM_BOT_TOKEN": "x", "WHISPER_VAD": "maybe"})
+
+
+def test_language_priority_and_prompt_defaults():
+    cfg = load_config({"TELEGRAM_BOT_TOKEN": "x"})
+    assert cfg.whisper_priority_language == "ru"
+    assert cfg.whisper_priority_margin == 0.2
+    assert cfg.whisper_initial_prompt  # non-empty Russian default
+    assert "хуй" in cfg.whisper_initial_prompt
+
+
+def test_priority_and_prompt_overrides():
+    cfg = load_config({
+        "TELEGRAM_BOT_TOKEN": "x",
+        "WHISPER_LANGUAGE_PRIORITY": "EN",
+        "WHISPER_PRIORITY_MARGIN": "0.5",
+        "WHISPER_INITIAL_PROMPT": "hi there",
+    })
+    assert cfg.whisper_priority_language == "en"
+    assert cfg.whisper_priority_margin == 0.5
+    assert cfg.whisper_initial_prompt == "hi there"
+
+
+def test_empty_priority_and_prompt_become_none():
+    cfg = load_config({
+        "TELEGRAM_BOT_TOKEN": "x",
+        "WHISPER_LANGUAGE_PRIORITY": "",
+        "WHISPER_INITIAL_PROMPT": "",
+    })
+    assert cfg.whisper_priority_language is None
+    assert cfg.whisper_initial_prompt is None
+
+
+def test_invalid_margin_raises():
+    with pytest.raises(ConfigError):
+        load_config({"TELEGRAM_BOT_TOKEN": "x", "WHISPER_PRIORITY_MARGIN": "1.5"})
+    with pytest.raises(ConfigError):
+        load_config({"TELEGRAM_BOT_TOKEN": "x", "WHISPER_PRIORITY_MARGIN": "abc"})
