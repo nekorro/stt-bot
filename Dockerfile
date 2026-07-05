@@ -5,22 +5,19 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     WHISPER_DOWNLOAD_ROOT=/models \
     WHISPER_MODEL=base \
+    WHISPER_COMPUTE_TYPE=int8 \
     METRICS_PORT=9100
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Install torch from the CPU wheel index first, then the app + whisper extra.
+# faster-whisper decodes audio via bundled PyAV, so no system ffmpeg is needed.
 COPY pyproject.toml ./
 COPY src ./src
-RUN pip install --extra-index-url https://download.pytorch.org/whl/cpu ".[whisper]"
+RUN pip install ".[whisper]"
 
-# Bake the model so startup needs no network and no PVC.
+# Bake the CTranslate2 base model so startup needs no network and no PVC.
 RUN mkdir -p /models \
-    && python -c "import whisper; whisper.load_model('base', download_root='/models')" \
+    && python -c "from faster_whisper import WhisperModel; WhisperModel('base', device='cpu', compute_type='int8', download_root='/models')" \
     && chmod -R a+rX /models
 
 # Non-root runtime user.
