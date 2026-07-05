@@ -32,6 +32,9 @@ def main() -> None:
         allowed_languages=config.whisper_allowed_languages,
         beam_size=config.whisper_beam_size,
         vad_filter=config.whisper_vad,
+        priority_language=config.whisper_priority_language,
+        priority_margin=config.whisper_priority_margin,
+        initial_prompt=config.whisper_initial_prompt,
         download_root=config.whisper_download_root,
     )
     log.info("warming up")
