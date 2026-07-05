@@ -102,7 +102,9 @@ class Transcriber:
         language = self._resolve_language(audio_path)
         prompt = (
             self._initial_prompt
-            if self._initial_prompt and language == self._priority_language
+            if self._initial_prompt
+            and self._priority_language
+            and language == self._priority_language
             else None
         )
         segments, info = self._model.transcribe(

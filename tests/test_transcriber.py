@@ -155,3 +155,10 @@ def test_no_initial_prompt_by_default():
     t = Transcriber(model)
     t.transcribe("/tmp/a.ogg")
     assert model.calls[0]["initial_prompt"] is None
+
+
+def test_initial_prompt_skipped_when_no_priority_language():
+    model = FakeModel(info=FakeInfo("en", 0.0))
+    t = Transcriber(model, initial_prompt="PRIME")  # no priority_language configured
+    t.transcribe("/tmp/a.ogg")
+    assert model.calls[0]["initial_prompt"] is None
