@@ -32,6 +32,9 @@ All configuration is via environment variables:
 | `WHISPER_DEVICE` | `cpu` | Compute device. |
 | `WHISPER_LANGUAGE` | auto | Force a single source language (e.g. `en`, `ru`); overrides the allowed-languages set below. |
 | `WHISPER_ALLOWED_LANGUAGES` | `en,ru` | Comma-separated languages to restrict detection to (one is picked per message). Set empty to allow all languages. |
+| `WHISPER_LANGUAGE_PRIORITY` | `ru` | Preferred language on a near-tie in detection. Empty = no preference. |
+| `WHISPER_PRIORITY_MARGIN` | `0.2` | How strongly to prefer the priority language: it wins if within this probability margin of the top language (`0.0`–`1.0`). |
+| `WHISPER_INITIAL_PROMPT` | *(Russian default)* | Decoder priming text; improves recognition of informal/obscene Russian. Applied only to the priority language. Set empty to disable. |
 | `ALLOWED_CHAT_IDS` | all | Comma-separated chat IDs to restrict the bot to. |
 | `MAX_AUDIO_DURATION_S` | `600` | Reject audio longer than this. |
 | `MAX_FILE_MB` | `50` | Reject files larger than this. |
